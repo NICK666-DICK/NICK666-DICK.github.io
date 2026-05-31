@@ -2,10 +2,11 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>浙大紫金港方圆2公里咖啡地图</title>
+    <title>浙大紫金港 · 咖啡地图</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- 国内可用CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;}
         body{background:#121212;color:#fff;text-align:center;padding:15px;}
@@ -13,16 +14,24 @@
         #map{width:98%;height:78vh;margin:0 auto;border-radius:12px;border:2px solid #333;}
         .back-btn{margin:20px 0;display:inline-block;padding:12px 35px;background:#d4af37;color:#000;text-decoration:none;border-radius:8px;font-weight:bold;}
         .coffee-popup{
-            min-width:220px;
-            max-width:280px;
+            min-width:240px;
+            max-width:300px;
             line-height:1.7;
             font-family:Arial,sans-serif;
+        }
+        /* 🔥 新增：咖啡店图片样式 */
+        .popup-img{
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 6px 6px 0 0;
+            margin-bottom: 8px;
         }
         .popup-header{
             background:#d4af37;
             color:#000;
             padding:8px 12px;
-            border-radius:6px 6px 0 0;
+            border-radius:0 0 6px 6px;
             font-weight:bold;
             font-size:16px;
         }
@@ -65,215 +74,152 @@
 <body>
     <h1>浙大紫金港方圆2公里 · 咖啡地图 ☕</h1>
     <div id="map"></div>
-    <a class="back-btn" href="index.html">返回主页</a>
+    <a class="back-btn" href="./index.html">返回主页</a>
 
     <script>
-    const centerLat = 30.3028;
-    const centerLon = 120.0818;
-    const searchRadius = 2000;
+    // 紫金港校区中心点
+    const centerLat = 30.3028
+    const centerLon = 120.0818
+    const searchRadius = 2000
 
-    const map = L.map('map').setView([centerLat, centerLon], 14);
+    const map = L.map('map').setView([centerLat, centerLon], 15)
 
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: ''
-    }).addTo(map);
+    // 国内可用高德地图瓦片（完全直连）
+    L.tileLayer('https://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+        attribution: '高德地图'
+    }).addTo(map)
 
+    // 2公里范围圈
     L.circle([centerLat, centerLon], {
         radius: searchRadius,
-        color: '#d4af37',
-        fillColor: '#d4af37',
-        fillOpacity: 0.08
-    }).addTo(map);
+        color:'#d4af37',
+        fillColor:'#d4af37',
+        fillOpacity:0.08
+    }).addTo(map)
 
-    // 咖啡图标
-    const coffeeIcon = L.divIcon({
-        className: 'custom-coffee-icon',
-        html: '<div style="color:#d4af37;font-size:24px;">☕</div>',
-        iconSize: [30, 30],
-        iconAnchor: [15, 30]
-    });
+    // 🔥 完整咖啡店数据（新增img图片字段）
+    const cafes = [
+        // 西区北线
+        {lat:30.3062, lon:120.0785, name:"熊爪咖啡", img:"images/熊爪咖啡.jpg", location:"银泉学园S3104商铺", hours:"工作日8:00-16:00；周末10:00-18:00", charge:"6个", feature:"助残障伙伴就业，氛围温柔，即将翻新装潢"},
+        {lat:30.3058, lon:120.0779, name:"麦思威（银泉店）", img:"images/麦思威银泉店.jpg", location:"银泉健身房对面", hours:"9:00-19:30", charge:"15个", feature:"运动能量补给站，售浙大特色饮品、轻食，座位灵活"},
+        {lat:30.3015, lon:120.0792, name:"潘方任求是馆", img:"images/潘方任求是馆.jpg", location:"图书馆主馆南侧，求是大讲堂辅楼", hours:"11:00-19:00", charge:"60+个", feature:"江南园林风格，咖啡用豆精选，适合自习/研讨"},
+        {lat:30.3041, lon:120.0735, name:"SMEcoffee", img:"images/SMEcoffee.jpg", location:"机械学院开物苑2幢1楼", hours:"9:00-18:00（非工作日随机休1天）", charge:"18个", feature:"简约机械风，两层布局，安静适合课间/小组讨论"},
+        {lat:30.3075, lon:120.0768, name:"麦思威（段永平店）", img:"images/麦思威段永平店.jpg", location:"北一教学楼104", hours:"工作日7:30-18:30；周末8:00-18:00", charge:"8个", feature:"简约文化风，空间开阔，提供免费充电器"},
+        {lat:30.3012, lon:120.0788, name:"麦思威（图书馆主馆店）", img:"images/麦思威图书馆店.jpg", location:"图书馆主馆一楼大厅", hours:"7:30-21:00", charge:"无", feature:"浙大风格装修，学术氛围浓厚，与图书馆连通"},
+        {lat:30.3055, lon:120.0782, name:"星巴克（银泉店）", img:"images/星巴克银泉店.jpg", location:"银泉学园S101商铺", hours:"7:00-21:00", charge:"部分座椅下方有插孔", feature:"校内经典连锁，座位多，设研讨长桌"},
+        
+        // 西区南线
+        {lat:30.2987, lon:120.0775, name:"晓风书屋", img:"images/晓风书屋.jpg", location:"古籍馆1楼", hours:"9:00-18:00", charge:"部分插座", feature:"书香+咖啡，木质环境，私密性强，座位少"},
+        {lat:30.2972, lon:120.0758, name:"Poly Tea 泡理茶研", img:"images/泡理茶研.jpg", location:"海纳苑5幢", hours:"9:00-19:30", charge:"无", feature:"小店可外带，室外露营椅，支持校内外卖"},
+        {lat:30.2995, lon:120.0812, name:"中西书屋", img:"images/中西书屋.jpg", location:"成均苑3幢1楼", hours:"9:00-21:00", charge:"每张桌子均有", feature:"大众书局内咖啡，约55座，可包场（配投影仪）"},
+        {lat:30.2982, lon:120.0835, name:"悦览树", img:"images/悦览树.jpg", location:"管理学院新大楼A座1楼", hours:"8:00-19:00", charge:"每张桌子均有", feature:"空间大（约70座），20人以上可包场（有最低消费）"},
+        {lat:30.2968, lon:120.0805, name:"星巴克（澄月店）", img:"images/星巴克澄月店.jpg", location:"澄月研究生宿舍楼1、2号楼辅楼商铺", hours:"7:00-21:00", charge:"一楼1个；二楼8个", feature:"两层布局，装修精致，适合久坐办公"},
+        {lat:30.2991, lon:120.0821, name:"西街咖啡", img:"images/西街咖啡.jpg", location:"成均苑9幢1楼", hours:"8:30-20:30", charge:"6个", feature:"空间大、采光好，静谧，提供简餐/会议茶歇"},
+        {lat:30.2976, lon:120.0818, name:"研院咖啡", img:"images/研院咖啡.jpg", location:"研究生教育综合楼1楼", hours:"工作日8:00-19:00；周末9:30-18:00", charge:"每张桌子1个", feature:"约25座，安静适配自习，可包场/茶歇预订"},
+        {lat:30.2965, lon:120.0809, name:"郁林SPACE", img:"images/郁林SPACE.jpg", location:"澄月活动中心", hours:"9:00-21:00", charge:"一楼1个；二楼每张桌基本都有", feature:"两层带卫生间，二楼有包厢，可简餐/团餐/包场"},
+        {lat:30.2988, lon:120.0807, name:"库迪咖啡（成均院店）", img:"images/库迪成均院店.jpg", location:"成均苑西区10幢教育学院1层大厅", hours:"工作日7:30-16:30；周末8:00-16:00", charge:"无", feature:"空间小，室内2座，室外12张露营椅"},
+        {lat:30.2998, lon:120.0796, name:"瑞幸咖啡（人文学院店）", img:"images/瑞幸人文学院店.jpg", location:"文科组团人文学院大楼1楼大厅", hours:"工作日7:30-19:00；周末7:30-18:30", charge:"3个", feature:"店面小，可使用学院大楼座位"},
+        {lat:30.3005, lon:120.0762, name:"瑞幸咖啡（西区店）", img:"images/瑞幸西区店.jpg", location:"西区学生服务中心尧坤楼1楼底商", hours:"周一至周六7:00-22:00；周日7:00-21:30", charge:"无", feature:"出杯快，室内约20座，无插座"},
+        {lat:30.2979, lon:120.0783, name:"浙大文创咖啡", img:"images/浙大文创咖啡.jpg", location:"艺博馆一楼", hours:"周二至周六9:00-17:00；周日9:00-16:30", charge:"2个", feature:"艺术氛围浓厚，红黑简约设计"},
+        
+        // 东区全线
+        {lat:30.3035, lon:120.0852, name:"库迪咖啡（启真湖教超店）", img:"images/库迪启真湖店.jpg", location:"启真湖教超", hours:"6:00-22:00", charge:"4个", feature:"开放式环境，有可租赁充电宝，适配上课顺路购饮"},
+        {lat:30.3012, lon:120.0885, name:"瑞幸咖啡（医学院店）", img:"images/瑞幸医学院店.jpg", location:"医学院科研楼D区二号", hours:"工作日7:00-21:00；周末7:30-21:00", charge:"3个", feature:"有沙发/圆桌，风格独特，适合临时讨论"},
+        {lat:30.3068, lon:120.0865, name:"瑞幸咖啡（白沙店）", img:"images/瑞幸白沙店.jpg", location:"白沙综合楼二楼", hours:"7:00-20:00", charge:"15个", feature:"约20座，座位多样，插座充足"},
+        {lat:30.3028, lon:120.0872, name:"瑞幸咖啡（环资店）", img:"images/瑞幸环资店.jpg", location:"环境与资源学院B座一楼大堂", hours:"工作日7:30-19:30；周末8:00-18:30", charge:"无", feature:"仅简易座位，无停留空间，随拿随走"},
+        {lat:30.3042, lon:120.0825, name:"紫牛公社", img:"images/紫牛公社.jpg", location:"行政楼2层（旧管理学院大楼）", hours:"工作日9:00-15:00；周末9:00-18:00", charge:"很多", feature:"可瞰启真湖，装修温馨，观景休闲优选"},
+        {lat:30.3072, lon:120.0858, name:"麦思威（青四店）", img:"images/麦思威青四店.jpg", location:"丹阳青溪学园青溪四舍楼下", hours:"8:00-19:00", charge:"13个", feature:"环境安静，座位充足，适配自习"},
+        {lat:30.3051, lon:120.0838, name:"麦思威（西一店）", img:"images/麦思威西一店.jpg", location:"西一B教学楼", hours:"工作日7:30-21:00；周末8:00-20:00", charge:"无", feature:"纯露天，5张长桌，出餐快，适配课间补给"},
+        {lat:30.3038, lon:120.0842, name:"麦思威（基图店）", img:"images/麦思威基图店.jpg", location:"基图一楼", hours:"8:00-19:00", charge:"特别多", feature:"环境安静，桌位/插座充足，适配图书馆配套放松"},
+        {lat:30.3045, lon:120.0868, name:"麦思威（东二店）", img:"images/麦思威东二店.jpg", location:"东二教学楼连廊一楼", hours:"工作日7:30-21:00；周末8:00-20:00", charge:"特别多", feature:"两层结构，自习位多，设独立包厢"},
+        {lat:30.3032, lon:120.0882, name:"麦思威（青荷咖啡吧）", img:"images/麦思威青荷店.jpg", location:"东五教学楼一楼", hours:"工作日7:20-19:20", charge:"无", feature:"外院楼下，简约安静，墙面有历史沿革装饰"},
+        {lat:30.3025, lon:120.0875, name:"麦思威（环资店）", img:"images/麦思威环资店.jpg", location:"环境与资源B座", hours:"工作日8:00-18:00；周末8:30-17:00", charge:"二楼桌下", feature:"小复式结构，窗边有插座，约20座"},
+        {lat:30.3018, lon:120.0862, name:"建工之家", img:"images/建工之家.jpg", location:"建筑工程学院A楼二层", hours:"工作日9:30-17:30", charge:"很多", feature:"空间大，可借投影仪，绿色装修，适配建工师生放松"},
+        {lat:30.3008, lon:120.0855, name:"邵医咖啡", img:"images/邵医咖啡.jpg", location:"纳米楼二楼", hours:"周一至周六9:00-18:00", charge:"很多", feature:"复古温馨风，店面大、座位足，适合小聚"},
+        {lat:30.3022, lon:120.0832, name:"校友咖啡（蒙楼咖啡）", img:"images/校友咖啡.jpg", location:"校友楼一楼", hours:"工作日8:00-18:00；周末10:00-18:00", charge:"很多", feature:"空间大、每桌基本有插座，氛围感拉满"}
+    ]
 
-    // 获取价格信息
-    const getSpecialPrice = (shopName) => {
-        const brandNames = {
-            '瑞幸': ['瑞幸咖啡', 'luckin', '瑞幸'],
-            '库迪': ['库迪咖啡', 'cotti', '库迪'],
-            '星巴克': ['星巴克', 'starbucks']
-        };
-
-        let brand = "";
-        if (brandNames['瑞幸'].some(name => shopName.includes(name))) brand = "瑞幸";
-        else if (brandNames['库迪'].some(name => shopName.includes(name))) brand = "库迪";
-        else if (brandNames['星巴克'].some(name => shopName.includes(name))) brand = "星巴克";
-
-        if (brand !== "") {
-            if (brand === "瑞幸" || brand === "库迪") {
-                let priceNum = Math.floor(Math.random() * 10) + 10;
-                const descMap = {
-                    "瑞幸": "美式10.9-13.9元，拿铁12.9-15.9元，主打平价连锁咖啡",
-                    "库迪": "美式11.9-14.9元，拿铁12.9-16.9元，高性价比连锁饮品"
-                };
-                return {
-                    level: `¥${priceNum}-${priceNum + 3} 连锁特惠`,
-                    desc: descMap[brand]
-                };
+    // 价格体系
+    const getPriceInfo = (name) => {
+        if(name.includes("瑞幸") || name.includes("库迪")){
+            return {
+                level:"¥10-20 连锁特惠",
+                desc:name.includes("瑞幸") 
+                    ? "美式10.9-13.9元，拿铁12.9-15.9元，主打平价连锁咖啡"
+                    : "美式11.9-14.9元，拿铁12.9-16.9元，高性价比连锁饮品"
             }
-            if (brand === "星巴克") {
-                let priceNum = Math.floor(Math.random() * 15) + 30;
-                return {
-                    level: `¥${priceNum}-${priceNum + 5} 高端连锁`,
-                    desc: "美式32-38元，拿铁35-44元，属于高端轻奢咖啡消费"
-                };
+        }
+        if(name.includes("星巴克")){
+            return {
+                level:"¥30-45 高端连锁",
+                desc:"美式32-38元，拿铁35-44元，属于高端轻奢咖啡消费"
             }
         }
-
-        const priceLevels = [
-            { level: '¥ 亲民', desc: '人均25-32元，学生党友好' },
-            { level: '¥¥ 适中', desc: '人均35-42元，品质稳定' },
-            { level: '¥¥¥ 精品', desc: '人均45-50元，手冲特调' }
-        ];
-        return priceLevels[Math.floor(Math.random() * priceLevels.length)];
-    };
-
-    // 生成评分、营业时间等信息
-    const generateCustomData = (shopName) => {
-        const rating = (4.2 + Math.random() * 0.6).toFixed(1);
-        const stars = '★'.repeat(Math.floor(rating)) + (rating % 1 >= 0.5 ? '½' : '');
-        const price = getSpecialPrice(shopName);
-        const openHoursOptions = ["8:00-20:00", "8:30-19:30", "9:00-19:00", "8:30-19:00"];
-        const openHours = openHoursOptions[Math.floor(Math.random() * openHoursOptions.length)];
-        return { rating, stars, price, openHours };
-    };
-
-    // 生成店铺简介
-    const getDiverseDescription = (tags, shopName) => {
-        const brandText = {
-            "瑞幸": [
-                "作为国内大型咖啡品牌连锁，整体经营模式成熟，出餐效率高，饮品性价比出众，深受年轻群体喜爱。",
-                "是国内规模庞大的咖啡连锁品牌，选用优质咖啡豆制作饮品，线上点单体系完善，日常消费十分便利。"
-            ],
-            "库迪": [
-                "属于新兴崛起的咖啡品牌连锁，门店分布广泛，定价亲民，主打轻量化的现代咖啡消费理念。",
-                "全国布局的咖啡连锁品牌，经营理念简约大众化，时常推出优惠活动，适合日常频繁饮用。"
-            ],
-            "星巴克": [
-                "享誉全球的高端咖啡品牌连锁，拥有成熟的品牌文化与空间设计，主打休闲轻奢的消费体验。",
-                "国际一线咖啡连锁品牌，烘焙工艺专业考究，店内环境静谧雅致，多用于休闲放松与轻商务小憩。"
-            ]
-        };
-
-        if (shopName.includes('瑞幸') || shopName.includes('luckin')) {
-            return brandText.瑞幸[Math.floor(Math.random() * 2)];
+        return {
+            level:"¥25-35 校园咖啡",
+            desc:"人均25-35元，学生党友好，适合日常学习休闲"
         }
-        if (shopName.includes('库迪') || shopName.includes('cotti')) {
-            return brandText.库迪[Math.floor(Math.random() * 2)];
-        }
-        if (shopName.includes('星巴克') || shopName.includes('starbucks')) {
-            return brandText.星巴克[Math.floor(Math.random() * 2)];
-        }
+    }
 
-        const templates = [
-            "这家精品咖啡馆主打{specialty}，采用{roast}烘焙工艺，店内环境{ambience}，适合{activity}。",
-            "独立小众咖啡门店，装修风格独特，饮品制作用心，整体氛围安静安逸。",
-            "主打手工现磨咖啡，搭配简易轻食甜点，环境清幽，适合独处放松。"
-        ];
-        const specialty = tags['coffee:specialty'] || "精品现磨咖啡";
-        const roast = ['浅度', '中度', '深度'][Math.floor(Math.random() * 3)];
-        const ambience = ['安静舒适', '文艺清幽', '简约淡雅'][Math.floor(Math.random() * 3)];
-        const activity = ['独处放松', '安静学习', '休闲小憩'][Math.floor(Math.random() * 3)];
-        let temp = templates[Math.floor(Math.random() * templates.length)];
-        return temp.replace('{specialty}', specialty).replace('{roast}', roast).replace('{ambience}', ambience).replace('{activity}', activity);
-    };
+    // 生成评分
+    const getRating = () => {
+        const rating = (4.2 + Math.random()*0.6).toFixed(1)
+        const stars = '★'.repeat(Math.floor(rating)) + (rating % 1 >= 0.5 ? '½' : '')
+        return {rating, stars}
+    }
 
-    // 获取咖啡馆数据
-    const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];node["amenity"="cafe"](around:${searchRadius},${centerLat},${centerLon});out body;`;
-
-    fetch(overpassUrl)
-        .then(res => res.json())
-        .then(data => {
-            data.elements.forEach(shop => {
-                const tags = shop.tags || {};
-                const name = tags.name || "小众独立咖啡馆";
-                const { rating, stars, price, openHours } = generateCustomData(name);
-                const description = getDiverseDescription(tags, name);
-                const specialties = tags['coffee:specialty'] ? tags['coffee:specialty'].split(',').map(s => s.trim()) : ['经典现磨咖啡'];
-
-                let popHtml = `
-                <div class="coffee-popup">
-                    <div class="popup-header">${name}</div>
-                    <div class="popup-body">
-                        <div class="popup-row">
-                            <span class="popup-label">综合评分</span>
-                            <span class="popup-value">
-                                <span class="rating-stars">${stars}</span> ${rating}
-                            </span>
-                        </div>
-                        <div class="popup-row">
-                            <span class="popup-label">价格区间</span>
-                            <span class="popup-value">${price.level} | ${price.desc}</span>
-                        </div>
-                        <div class="popup-row">
-                            <span class="popup-label">营业时间</span>
-                            <span class="popup-value">${openHours}</span>
-                        </div>
-                        <div class="popup-row">
-                            <span class="popup-label">饮品特色</span>
-                            <div class="popup-value">
-                                ${specialties.map(s => `<span class="specialty-tag">${s}</span>`).join('')}
-                            </div>
-                        </div>
-                        <div class="popup-row">
-                            <span class="popup-label">店铺简介</span>
-                            <span class="popup-value">${description}</span>
-                        </div>
-                    </div>
+    // 渲染所有咖啡店
+    cafes.forEach(cafe => {
+        const {rating, stars} = getRating()
+        const price = getPriceInfo(cafe.name)
+        
+        // 🔥 弹窗新增图片展示
+        const popHtml = `
+        <div class="coffee-popup">
+            <img src="${cafe.img}" class="popup-img" alt="${cafe.name}">
+            <div class="popup-header">${cafe.name}</div>
+            <div class="popup-body">
+                <div class="popup-row">
+                    <span class="popup-label">综合评分</span>
+                    <span class="popup-value">
+                        <span class="rating-stars">${stars}</span> ${rating}
+                    </span>
                 </div>
-                `;
+                <div class="popup-row">
+                    <span class="popup-label">价格区间</span>
+                    <span class="popup-value">${price.level} | ${price.desc}</span>
+                </div>
+                <div class="popup-row">
+                    <span class="popup-label">具体位置</span>
+                    <span class="popup-value">${cafe.location}</span>
+                </div>
+                <div class="popup-row">
+                    <span class="popup-label">营业时间</span>
+                    <span class="popup-value">${cafe.hours}</span>
+                </div>
+                <div class="popup-row">
+                    <span class="popup-label">充电口</span>
+                    <span class="popup-value">${cafe.charge}</span>
+                </div>
+                <div class="popup-row">
+                    <span class="popup-label">核心特色</span>
+                    <span class="popup-value">${cafe.feature}</span>
+                </div>
+            </div>
+        </div>
+        `
 
-                L.marker([shop.lat, shop.lon], { icon: coffeeIcon })
-                    .addTo(map)
-                    .bindPopup(popHtml, { maxWidth: 280 });
-            });
+        const coffeeIcon = L.divIcon({
+            className: 'custom-coffee-icon',
+            html: '<div style="color:#d4af37;font-size:24px;">☕</div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30]
         })
-        .catch(err => {
-            // 备用咖啡馆数据
-            const backupCafes = [
-                { lat: 30.304, lon: 120.082, name: "瑞幸咖啡(紫金港分店)" },
-                { lat: 30.306, lon: 120.084, name: "库迪咖啡(浙大校园店)" },
-                { lat: 30.300, lon: 120.077, name: "星巴克(紫金港商圈店)" }
-            ];
-            backupCafes.forEach(cafe => {
-                const { rating, stars, price, openHours } = generateCustomData(cafe.name);
-                const description = getDiverseDescription({}, cafe.name);
-                L.marker([cafe.lat, cafe.lon], { icon: coffeeIcon })
-                    .addTo(map)
-                    .bindPopup(`
-                    <div class="coffee-popup">
-                        <div class="popup-header">${cafe.name}</div>
-                        <div class="popup-body">
-                            <div class="popup-row">
-                                <span class="popup-label">综合评分</span>
-                                <span class="popup-value">
-                                    <span class="rating-stars">${stars}</span> ${rating}
-                                </span>
-                            </div>
-                            <div class="popup-row">
-                                <span class="popup-label">价格区间</span>
-                                <span class="popup-value">${price.level} | ${price.desc}</span>
-                            </div>
-                            <div class="popup-row">
-                                <span class="popup-label">营业时间</span>
-                                <span class="popup-value">${openHours}</span>
-                            </div>
-                            <div class="popup-row">
-                                <span class="popup-label">店铺简介</span>
-                                <span class="popup-value">${description}</span>
-                            </div>
-                        </div>
-                    </div>
-                    `);
-            });
-        });
+
+        L.marker([cafe.lat, cafe.lon], {icon: coffeeIcon})
+        .addTo(map)
+        .bindPopup(popHtml, {maxWidth: 300})
+    })
     </script>
 </body>
 </html>
