@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>3公里咖啡地图（三大连锁精准定价）</title>
+    <title>浙大紫金港方圆2公里咖啡地图</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -65,26 +65,35 @@
 <body>
     <h1>浙大紫金港方圆2公里 · 咖啡地图 ☕</h1>
     <div id="map"></div>
-    <a class="back-btn" href=" ">返回主页</a >
+    <a class="back-btn" href="index.html">返回主页</a>
 
     <script>
-    const centerLat = 30.3028
-    const centerLon = 120.0818
-    const searchRadius = 2000
+    const centerLat = 30.3028;
+    const centerLon = 120.0818;
+    const searchRadius = 2000;
 
-    const map = L.map('map').setView([centerLat, centerLon], 14)
+    const map = L.map('map').setView([centerLat, centerLon], 14);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution:''
-    }).addTo(map)
+        attribution: ''
+    }).addTo(map);
 
     L.circle([centerLat, centerLon], {
         radius: searchRadius,
-        color:'#d4af37',
-        fillColor:'#d4af37',
-        fillOpacity:0.08
-    }).addTo(map)
+        color: '#d4af37',
+        fillColor: '#d4af37',
+        fillOpacity: 0.08
+    }).addTo(map);
 
+    // 咖啡图标
+    const coffeeIcon = L.divIcon({
+        className: 'custom-coffee-icon',
+        html: '<div style="color:#d4af37;font-size:24px;">☕</div>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 30]
+    });
+
+    // 获取价格信息
     const getSpecialPrice = (shopName) => {
         const brandNames = {
             '瑞幸': ['瑞幸咖啡', 'luckin', '瑞幸'],
@@ -97,68 +106,70 @@
         else if (brandNames['库迪'].some(name => shopName.includes(name))) brand = "库迪";
         else if (brandNames['星巴克'].some(name => shopName.includes(name))) brand = "星巴克";
 
-        if(brand !== ""){
-            if(brand === "瑞幸" || brand === "库迪"){
+        if (brand !== "") {
+            if (brand === "瑞幸" || brand === "库迪") {
                 let priceNum = Math.floor(Math.random() * 10) + 10;
                 const descMap = {
-                    "瑞幸":"美式10.9-13.9元，拿铁12.9-15.9元，主打平价连锁咖啡",
-                    "库迪":"美式11.9-14.9元，拿铁12.9-16.9元，高性价比连锁饮品"
-                }
+                    "瑞幸": "美式10.9-13.9元，拿铁12.9-15.9元，主打平价连锁咖啡",
+                    "库迪": "美式11.9-14.9元，拿铁12.9-16.9元，高性价比连锁饮品"
+                };
                 return {
-                    level:`¥${priceNum}-${priceNum+3} 连锁特惠`,
-                    desc:descMap[brand]
-                }
+                    level: `¥${priceNum}-${priceNum + 3} 连锁特惠`,
+                    desc: descMap[brand]
+                };
             }
-            if(brand === "星巴克"){
+            if (brand === "星巴克") {
                 let priceNum = Math.floor(Math.random() * 15) + 30;
                 return {
-                    level:`¥${priceNum}-${priceNum+5} 高端连锁`,
-                    desc:"美式32-38元，拿铁35-44元，属于高端轻奢咖啡消费"
-                }
+                    level: `¥${priceNum}-${priceNum + 5} 高端连锁`,
+                    desc: "美式32-38元，拿铁35-44元，属于高端轻奢咖啡消费"
+                };
             }
         }
 
         const priceLevels = [
-            {level: '¥ 亲民', desc: '人均25-32元，学生党友好'},
-            {level: '¥¥ 适中', desc: '人均35-42元，品质稳定'},
-            {level: '¥¥¥ 精品', desc: '人均45-50元，手冲特调'}
+            { level: '¥ 亲民', desc: '人均25-32元，学生党友好' },
+            { level: '¥¥ 适中', desc: '人均35-42元，品质稳定' },
+            { level: '¥¥¥ 精品', desc: '人均45-50元，手冲特调' }
         ];
-        return priceLevels[Math.floor(Math.random()*priceLevels.length)];
+        return priceLevels[Math.floor(Math.random() * priceLevels.length)];
     };
 
+    // 生成评分、营业时间等信息
     const generateCustomData = (shopName) => {
-        const rating = (4.2 + Math.random()*0.6).toFixed(1);
-        const stars = '★'.repeat(Math.floor(rating))+(rating % 1 >= 0.5 ? '½' : '');
+        const rating = (4.2 + Math.random() * 0.6).toFixed(1);
+        const stars = '★'.repeat(Math.floor(rating)) + (rating % 1 >= 0.5 ? '½' : '');
         const price = getSpecialPrice(shopName);
-        const openHoursOptions = ["8:00-20:00","8:30-19:30","9:00-19:00","8:30-19:00"];
-        const openHours = openHoursOptions[Math.floor(Math.random()*openHoursOptions.length)];
-        return {rating, stars, price, openHours};
+        const openHoursOptions = ["8:00-20:00", "8:30-19:30", "9:00-19:00", "8:30-19:00"];
+        const openHours = openHoursOptions[Math.floor(Math.random() * openHoursOptions.length)];
+        return { rating, stars, price, openHours };
     };
 
+    // 生成店铺简介
     const getDiverseDescription = (tags, shopName) => {
         const brandText = {
-            "瑞幸":[
+            "瑞幸": [
                 "作为国内大型咖啡品牌连锁，整体经营模式成熟，出餐效率高，饮品性价比出众，深受年轻群体喜爱。",
                 "是国内规模庞大的咖啡连锁品牌，选用优质咖啡豆制作饮品，线上点单体系完善，日常消费十分便利。"
             ],
-            "库迪":[
+            "库迪": [
                 "属于新兴崛起的咖啡品牌连锁，门店分布广泛，定价亲民，主打轻量化的现代咖啡消费理念。",
                 "全国布局的咖啡连锁品牌，经营理念简约大众化，时常推出优惠活动，适合日常频繁饮用。"
             ],
-            "星巴克":[
+            "星巴克": [
                 "享誉全球的高端咖啡品牌连锁，拥有成熟的品牌文化与空间设计，主打休闲轻奢的消费体验。",
                 "国际一线咖啡连锁品牌，烘焙工艺专业考究，店内环境静谧雅致，多用于休闲放松与轻商务小憩。"
             ]
-        }
+        };
 
-        if (shopName.includes('瑞幸') || shopName.includes('luckin')){
-            return brandText.瑞幸[Math.floor(Math.random()*2)];
+        if (shopName.includes('瑞幸') || shopName.includes('luckin')) {
+            return brandText.瑞幸[Math.floor(Math.random() * 2)];
         }
-        if (shopName.includes('库迪') || shopName.includes('cotti')){
-            return brandText.库迪[Math.floor(Math.random()*2)];
+        if (shopName.includes('库迪') || shopName.includes('cotti')) {
+            return brandText.库迪[Math.floor(Math.random() * 2)];
         }
-        if (shopName.includes('星巴克') || shopName.includes('starbucks')){
-            return brandText.星巴克[Math.floor(Math.random()*2)];
+        if (shopName.includes('星巴克') || shopName.includes('starbucks')) {
+            return brandText.星巴克[Math.floor(Math.random() * 2)];
         }
 
         const templates = [
@@ -167,107 +178,102 @@
             "主打手工现磨咖啡，搭配简易轻食甜点，环境清幽，适合独处放松。"
         ];
         const specialty = tags['coffee:specialty'] || "精品现磨咖啡";
-        const roast = ['浅度','中度','深度'][Math.floor(Math.random()*3)];
-        const ambience = ['安静舒适','文艺清幽','简约淡雅'][Math.floor(Math.random()*3)];
-        const activity = ['独处放松','安静学习','休闲小憩'][Math.floor(Math.random()*3)];
-        let temp = templates[Math.floor(Math.random()*templates.length)];
-        return temp.replace('{specialty}',specialty).replace('{roast}',roast).replace('{ambience}',ambience).replace('{activity}',activity);
+        const roast = ['浅度', '中度', '深度'][Math.floor(Math.random() * 3)];
+        const ambience = ['安静舒适', '文艺清幽', '简约淡雅'][Math.floor(Math.random() * 3)];
+        const activity = ['独处放松', '安静学习', '休闲小憩'][Math.floor(Math.random() * 3)];
+        let temp = templates[Math.floor(Math.random() * templates.length)];
+        return temp.replace('{specialty}', specialty).replace('{roast}', roast).replace('{ambience}', ambience).replace('{activity}', activity);
     };
 
+    // 获取咖啡馆数据
     const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];node["amenity"="cafe"](around:${searchRadius},${centerLat},${centerLon});out body;`;
-    
-    fetch(overpassUrl)
-    .then(res=>res.json())
-    .then(data=>{
-        data.elements.forEach(shop=>{
-            const tags = shop.tags || {};
-            const name = tags.name || "小众独立咖啡馆";
-            const {rating, stars, price, openHours} = generateCustomData(name);
-            const description = getDiverseDescription(tags, name);
-            const specialties = tags['coffee:specialty'] ? tags['coffee:specialty'].split(',').map(s=>s.trim()) : ['经典现磨咖啡'];
 
-            let popHtml = `
-            <div class="coffee-popup">
-                <div class="popup-header">${name}</div>
-                <div class="popup-body">
-                    <div class="popup-row">
-                        <span class="popup-label">综合评分</span>
-                        <span class="popup-value">
-                            <span class="rating-stars">${stars}</span> ${rating}
-                        </span>
-                    </div>
-                    <div class="popup-row">
-                        <span class="popup-label">价格区间</span>
-                        <span class="popup-value">${price.level} | ${price.desc}</span>
-                    </div>
-                    <div class="popup-row">
-                        <span class="popup-label">营业时间</span>
-                        <span class="popup-value">${openHours}</span>
-                    </div>
-                    <div class="popup-row">
-                        <span class="popup-label">饮品特色</span>
-                        <div class="popup-value">
-                            ${specialties.map(s=>`<span class="specialty-tag">${s}</span>`).join('')}
+    fetch(overpassUrl)
+        .then(res => res.json())
+        .then(data => {
+            data.elements.forEach(shop => {
+                const tags = shop.tags || {};
+                const name = tags.name || "小众独立咖啡馆";
+                const { rating, stars, price, openHours } = generateCustomData(name);
+                const description = getDiverseDescription(tags, name);
+                const specialties = tags['coffee:specialty'] ? tags['coffee:specialty'].split(',').map(s => s.trim()) : ['经典现磨咖啡'];
+
+                let popHtml = `
+                <div class="coffee-popup">
+                    <div class="popup-header">${name}</div>
+                    <div class="popup-body">
+                        <div class="popup-row">
+                            <span class="popup-label">综合评分</span>
+                            <span class="popup-value">
+                                <span class="rating-stars">${stars}</span> ${rating}
+                            </span>
+                        </div>
+                        <div class="popup-row">
+                            <span class="popup-label">价格区间</span>
+                            <span class="popup-value">${price.level} | ${price.desc}</span>
+                        </div>
+                        <div class="popup-row">
+                            <span class="popup-label">营业时间</span>
+                            <span class="popup-value">${openHours}</span>
+                        </div>
+                        <div class="popup-row">
+                            <span class="popup-label">饮品特色</span>
+                            <div class="popup-value">
+                                ${specialties.map(s => `<span class="specialty-tag">${s}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div class="popup-row">
+                            <span class="popup-label">店铺简介</span>
+                            <span class="popup-value">${description}</span>
                         </div>
                     </div>
-                    <div class="popup-row">
-                        <span class="popup-label">店铺简介</span>
-                        <span class="popup-value">${description}</span>
-                    </div>
                 </div>
-            </div>
-            `;
+                `;
 
-            const coffeeIcon = L.divIcon({
-                className: 'custom-coffee-icon',
-                html: '<div style="color:#d4af37;font-size:24px;">☕</div>',
-                iconSize: [30, 30],
-                iconAnchor: [15, 30]
+                L.marker([shop.lat, shop.lon], { icon: coffeeIcon })
+                    .addTo(map)
+                    .bindPopup(popHtml, { maxWidth: 280 });
             });
-
-            L.marker([shop.lat, shop.lon], {icon: coffeeIcon})
-            .addTo(map)
-            .bindPopup(popHtml, {maxWidth: 280});
         })
-    })
-    .catch(err => {
-        const backupCafes = [
-            {lat:30.304, lon:120.082, name:"瑞幸咖啡(紫金港分店)"},
-            {lat:30.306, lon:120.084, name:"库迪咖啡(浙大校园店)"},
-            {lat:30.300, lon:120.077, name:"星巴克(紫金港商圈店)"}
-        ];
-        backupCafes.forEach(cafe => {
-            const {rating, stars, price, openHours} = generateCustomData(cafe.name);
-            const description = getDiverseDescription({},cafe.name);
-            L.marker([cafe.lat, cafe.lon], {icon: coffeeIcon})
-            .addTo(map)
-            .bindPopup(`
-            <div class="coffee-popup">
-                <div class="popup-header">${cafe.name}</div>
-                <div class="popup-body">
-                    <div class="popup-row">
-                        <span class="popup-label">综合评分</span>
-                        <span class="popup-value">
-                            <span class="rating-stars">${stars}</span> ${rating}
-                        </span>
+        .catch(err => {
+            // 备用咖啡馆数据
+            const backupCafes = [
+                { lat: 30.304, lon: 120.082, name: "瑞幸咖啡(紫金港分店)" },
+                { lat: 30.306, lon: 120.084, name: "库迪咖啡(浙大校园店)" },
+                { lat: 30.300, lon: 120.077, name: "星巴克(紫金港商圈店)" }
+            ];
+            backupCafes.forEach(cafe => {
+                const { rating, stars, price, openHours } = generateCustomData(cafe.name);
+                const description = getDiverseDescription({}, cafe.name);
+                L.marker([cafe.lat, cafe.lon], { icon: coffeeIcon })
+                    .addTo(map)
+                    .bindPopup(`
+                    <div class="coffee-popup">
+                        <div class="popup-header">${cafe.name}</div>
+                        <div class="popup-body">
+                            <div class="popup-row">
+                                <span class="popup-label">综合评分</span>
+                                <span class="popup-value">
+                                    <span class="rating-stars">${stars}</span> ${rating}
+                                </span>
+                            </div>
+                            <div class="popup-row">
+                                <span class="popup-label">价格区间</span>
+                                <span class="popup-value">${price.level} | ${price.desc}</span>
+                            </div>
+                            <div class="popup-row">
+                                <span class="popup-label">营业时间</span>
+                                <span class="popup-value">${openHours}</span>
+                            </div>
+                            <div class="popup-row">
+                                <span class="popup-label">店铺简介</span>
+                                <span class="popup-value">${description}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="popup-row">
-                        <span class="popup-label">价格区间</span>
-                        <span class="popup-value">${price.level} | ${price.desc}</span>
-                    </div>
-                    <div class="popup-row">
-                        <span class="popup-label">营业时间</span>
-                        <span class="popup-value">${openHours}</span>
-                    </div>
-                    <div class="popup-row">
-                        <span class="popup-label">店铺简介</span>
-                        <span class="popup-value">${description}</span>
-                    </div>
-                </div>
-            </div>
-            `);
+                    `);
+            });
         });
-    });
     </script>
 </body>
 </html>
