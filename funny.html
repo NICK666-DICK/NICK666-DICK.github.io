@@ -46,14 +46,14 @@
             width: 100vw;
             height: 100vh;
             background: #000;
-            z-index: 999;
+            z-index: 9999;
             align-items: center;
             justify-content: center;
         }
         .scary-img{
             max-width: 90vw;
             max-height: 90vh;
-            border-radius: 8px;
+            border-radius:8px;
         }
     </style>
 </head>
@@ -61,27 +61,26 @@
     <h1>没事不要乱点</h1>
     <button class="main-btn">请按</button>
 
-    <div class="scary.jpg">
-        <!-- 直接在线调用你的这张照片，不用自己上传 -->
-        < img class="scary-img" src="https://p9-flow-image-sign.byteimg.com/tos-cn-i-a9r32ns0r0/fa06.jpeg">
+    <div class="scary-pop">
+        < img class="scary-img" src="scary.jpg">
     </div>
 
     <script>
         const btn = document.querySelector('.main-btn')
         const pop = document.querySelector('.scary-pop')
-        // 恐怖尖叫音效
         const scarySound = new Audio('https://www.myinstants.com/media/sounds/jumpscare-scream.mp3')
+        scarySound.preload = 'auto'
 
-        btn.addEventListener('click', ()=>{
+        btn.onclick = ()=>{
             pop.style.display = 'flex'
+            scarySound.currentTime = 0
             scarySound.volume = 1
-            scarySound.play().catch(()=>{})
-        })
+            scarySound.play()
+        }
 
-        // 点击任意位置关闭
-        pop.addEventListener('click', ()=>{
+        pop.onclick = ()=>{
             pop.style.display = 'none'
-        })
+        }
     </script>
 </body>
 </html>
