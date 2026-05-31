@@ -24,7 +24,6 @@
             margin-bottom: 80px;
             letter-spacing: 2px;
         }
-        /* 主按钮 */
         .main-btn{
             background:#d4af37;
             border:none;
@@ -39,7 +38,6 @@
             background: #b9962c;
             transform: scale(1.05);
         }
-        /* 惊吓弹窗 */
         .scary-pop{
             display: none;
             position: fixed;
@@ -63,27 +61,24 @@
     <h1>没事不要乱点</h1>
     <button class="main-btn">请按</button>
 
-    <!-- 惊吓弹窗+音效 -->
     <div class="scary-pop">
-        < img class="scary-img" src="./scary.jpg">
+        <!-- 直接在线调用你的这张照片，不用自己上传 -->
+        < img class="scary-img" src="https://p9-flow-image-sign.byteimg.com/tos-cn-i-a9r32ns0r0/fa06.jpeg">
     </div>
 
     <script>
         const btn = document.querySelector('.main-btn')
         const pop = document.querySelector('.scary-pop')
-
-        // 恐怖惊吓音效（免上传，直接在线调用）
+        // 恐怖尖叫音效
         const scarySound = new Audio('https://www.myinstants.com/media/sounds/jumpscare-scream.mp3')
 
         btn.addEventListener('click', ()=>{
-            // 瞬间弹出全屏图片
             pop.style.display = 'flex'
-            // 拉满音量播放恐怖尖叫音效
             scarySound.volume = 1
-            scarySound.play()
+            scarySound.play().catch(()=>{})
         })
 
-        // 点击任意位置关闭弹窗
+        // 点击任意位置关闭
         pop.addEventListener('click', ()=>{
             pop.style.display = 'none'
         })
