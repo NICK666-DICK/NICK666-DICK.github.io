@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>全新创意网页</title>
+    <title>千万别乱按</title>
     <style>
         * {
             margin: 0;
@@ -12,33 +12,81 @@
         }
         body {
             background: #121212;
-            color: #ffffff;
+            min-height: 100vh;
             font-family: 微软雅黑;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         h1 {
             color: #d4af37;
-            padding: 80px 0;
+            margin-bottom: 80px;
             letter-spacing: 2px;
-            font-weight: normal;
         }
-        button{
+        /* 主按钮 */
+        .main-btn{
             background:#d4af37;
             border:none;
-            padding:15px 50px;
-            border-radius:8px;
-            font-size:16px;
-            cursor:pointer;
-            font-weight: bold;
-            transition: 0.3s;
+            padding:20px 80px;
+            border-radius:10px;
+            font-size:20px;
+            font-weight:bold;
+            cursor: pointer;
+            transition: 0.2s;
         }
-        button:hover{
+        .main-btn:hover{
             background: #b9962c;
+            transform: scale(1.05);
+        }
+        /* 惊吓弹窗 */
+        .scary-pop{
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+        .scary-img{
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
-    <h1>全新网页 待开发</h1>
-    <button>请按</button>
+    <h1>没事不要乱点</h1>
+    <button class="main-btn">请按</button>
+
+    <!-- 惊吓弹窗+音效 -->
+    <div class="scary-pop">
+        < img class="scary-img" src="./scary.jpg">
+    </div>
+
+    <script>
+        const btn = document.querySelector('.main-btn')
+        const pop = document.querySelector('.scary-pop')
+
+        // 恐怖惊吓音效（免上传，直接在线调用）
+        const scarySound = new Audio('https://www.myinstants.com/media/sounds/jumpscare-scream.mp3')
+
+        btn.addEventListener('click', ()=>{
+            // 瞬间弹出全屏图片
+            pop.style.display = 'flex'
+            // 拉满音量播放恐怖尖叫音效
+            scarySound.volume = 1
+            scarySound.play()
+        })
+
+        // 点击任意位置关闭弹窗
+        pop.addEventListener('click', ()=>{
+            pop.style.display = 'none'
+        })
+    </script>
 </body>
 </html>
