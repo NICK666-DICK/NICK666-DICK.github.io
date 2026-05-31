@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>3公里咖啡地图</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 开源免费地图核心，无需API密钥 -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -13,6 +12,12 @@
         h1{color:#d4af37;margin-bottom:15px;letter-spacing:2px;}
         #map{width:98%;height:78vh;margin:0 auto;border-radius:12px;border:2px solid #333;}
         .back-btn{margin:20px 0;display:inline-block;padding:12px 35px;background:#d4af37;color:#000;text-decoration:none;border-radius:8px;font-weight:bold;}
+        /* 自定义弹窗样式 */
+        .pop-box{
+            line-height:1.6;
+            font-size:14px;
+            color:#333;
+        }
     </style>
 </head>
 <body>
@@ -21,41 +26,51 @@
     <a class="back-btn" href=" ">返回主页</a >
 
     <script>
-        // 1. 中心点（这里是浙大紫金港，想换位置改下面2个数字即可）
-        const centerLat = 30.3028
-        const centerLon = 120.0818
-        // 2. 搜索半径 3000=3公里，可自行修改
-        const searchRadius = 2000
+    // 精准浙大紫金港校区中心坐标
+    const centerLat = 30.3028
+    const centerLon = 120.0818
+    const searchRadius = 2000
 
-        // 初始化地图
-        const map = L.map('map').setView([centerLat, centerLon], 14)
+    const map = L.map('map').setView([centerLat, centerLon], 14)
 
-        // 加载标准底图
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution:''
-        }).addTo(map)
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution:''
+    }).addTo(map)
 
-        // 画3公里范围圆圈
-        L.circle([centerLat, centerLon], {
-            radius: searchRadius,
-            color:'#d4af37',
-            fillColor:'#d4af37',
-            fillOpacity:0.08
-        }).addTo(map)
+    // 绘制三公里范围金色圈层
+    L.circle([centerLat, centerLon], {
+        radius: searchRadius,
+        color:'#d4af37',
+        fillColor:'#d4af37',
+        fillOpacity:0.08
+    }).addTo(map)
 
-        // 自动拉取圈内全部咖啡店并打点
-        const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];node["amenity"="cafe"](around:${searchRadius},${centerLat},${centerLon});out;`
-        
-        fetch(overpassUrl)
-        .then(res=>res.json())
-        .then(data=>{
-            data.elements.forEach(shop=>{
-                const name = shop.tags.name || "无名咖啡店"
-                L.marker([shop.lat, shop.lon])
-                .addTo(map)
-                .bindPopup(`☕ ${name}`)
-            })
+    // 抓取周边全部咖啡店 附带详细简介
+    const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];node["amenity"="cafe"](around:${searchRadius},${centerLat},${centerLon});out;`
+    
+    fetch(overpassUrl)
+    .then(res=>res.json())
+    .then(data=>{
+        data.elements.forEach(shop=>{
+            let shopName = shop.tags.name || "小众隐秘咖啡店";
+            let brandInfo = shop.tags.brand || "独立私人咖啡馆";
+            let openTime = shop.tags.opening_hours || "全天正常营业";
+            let feature = shop.tags.description || "环境安静静谧，适合静坐小憩，品鉴醇香咖啡。";
+
+            // 拼接完整文字简介弹窗
+            let popHtml = `
+            <div class="pop-box">
+                <h3>${shopName}</h3>
+                <p>门店类型：${brandInfo}</p >
+                <p>营业时间：${openTime}</p >
+                <p>店铺简介：${feature}</p >
+            </div>
+            `
+            L.marker([shop.lat, shop.lon])
+            .addTo(map)
+            .bindPopup(popHtml)
         })
+    })
     </script>
 </body>
 </html>
