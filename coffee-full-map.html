@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>3公里咖啡地图</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 开源免费地图核心，无需API密钥 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:#121212;color:#fff;text-align:center;padding:15px;}
+        h1{color:#d4af37;margin-bottom:15px;letter-spacing:2px;}
+        #map{width:98%;height:78vh;margin:0 auto;border-radius:12px;border:2px solid #333;}
+        .back-btn{margin:20px 0;display:inline-block;padding:12px 35px;background:#d4af37;color:#000;text-decoration:none;border-radius:8px;font-weight:bold;}
+    </style>
+</head>
+<body>
+    <h1>方圆3公里 · 全量咖啡地图 ☕</h1>
+    <div id="map"></div>
+    <a class="back-btn" href=" ">返回主页</a >
+
+    <script>
+        // 1. 中心点（这里是浙大紫金港，想换位置改下面2个数字即可）
+        const centerLat = 30.282
+        const centerLon = 120.081
+        // 2. 搜索半径 3000=3公里，可自行修改
+        const searchRadius = 3000
+
+        // 初始化地图
+        const map = L.map('map').setView([centerLat, centerLon], 14)
+
+        // 加载标准底图
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution:''
+        }).addTo(map)
+
+        // 画3公里范围圆圈
+        L.circle([centerLat, centerLon], {
+            radius: searchRadius,
+            color:'#d4af37',
+            fillColor:'#d4af37',
+            fillOpacity:0.08
+        }).addTo(map)
+
+        // 自动拉取圈内全部咖啡店并打点
+        const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];node["amenity"="cafe"](around:${searchRadius},${centerLat},${centerLon});out;`
+        
+        fetch(overpassUrl)
+        .then(res=>res.json())
+        .then(data=>{
+            data.elements.forEach(shop=>{
+                const name = shop.tags.name || "无名咖啡店"
+                L.marker([shop.lat, shop.lon])
+                .addTo(map)
+                .bindPopup(`☕ ${name}`)
+            })
+        })
+    </script>
+</body>
+</html>
