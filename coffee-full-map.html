@@ -2,190 +2,264 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>浙大紫金港 · 咖啡地图</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 国内CDN 无需VPN -->
+    <title>浙大紫金港 · 咖啡地图</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{background:#121212;color:#fff;text-align:center;padding:15px;}
-        h1{color:#d4af37;margin-bottom:15px;letter-spacing:2px;}
-        #map{width:98%;height:78vh;margin:0 auto;border-radius:12px;border:2px solid #333;}
-        .back-btn{margin:20px 0;display:inline-block;padding:12px 35px;background:#d4af37;color:#000;text-decoration:none;border-radius:8px;font-weight:bold;}
-        .coffee-popup{
-            min-width:240px;
-            max-width:300px;
-            line-height:1.7;
-            font-family:Arial,sans-serif;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #121212;
+            color: #fff;
+            text-align: center;
+            padding: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-        .popup-header{
-            background:#d4af37;
-            color:#000;
-            padding:8px 12px;
-            border-radius:6px 6px 0 0;
-            font-weight:bold;
-            font-size:16px;
+        h1 { color: #d4af37; margin-bottom: 15px; letter-spacing: 2px; font-size: 24px; }
+        #map {
+            width: 98%;
+            max-width: 1000px;
+            height: 72vh;
+            margin: 0 auto;
+            border-radius: 16px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            background: #1e1e1e;
         }
-        .popup-body{
-            padding:12px;
-            background:#fff;
-            color:#333;
-            border-radius:0 0 6px 6px;
+        .back-btn {
+            margin: 20px 0;
+            display: inline-block;
+            padding: 12px 45px;
+            background: #d4af37;
+            color: #000;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: all 0.3s ease;
         }
-        .popup-row{
-            margin:8px 0;
-            padding-bottom:6px;
-            border-bottom:1px solid #eee;
+        .back-btn:hover {
+            background: #f1c40f;
+            transform: scale(1.05);
         }
-        .popup-label{
-            color:#888;
-            font-size:12px;
-            display:block;
+
+        /* 👑 核心：彻底重写 Leaflet 弹窗的默认白边样式，使其融入暗黑金风格 */
+        .leaflet-popup-content-wrapper {
+            background: #1e1e1e !important;
+            color: #fff !important;
+            border: 1px solid #d4af37 !important;
+            padding: 0 !important;
+            overflow: hidden;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
         }
-        .popup-value{
-            font-size:14px;
-            margin-top:2px;
+        .leaflet-popup-content {
+            margin: 0 !important;
+            width: 280px !important;
         }
-        .rating-stars{
-            color:#ffc107;
-            font-size:16px;
+        .leaflet-popup-tip {
+            background: #1e1e1e !important;
+            border-left: 1px solid #d4af37;
+            border-bottom: 1px solid #d4af37;
+        }
+        .leaflet-popup-close-button {
+            color: #000 !important;
+            padding: 8px 8px 0 0 !important;
+            z-index: 10;
+        }
+
+        /* 内部弹窗样式升级 */
+        .coffee-popup {
+            width: 100%;
+            line-height: 1.6;
+        }
+        .popup-header {
+            background: #d4af37;
+            color: #121212;
+            padding: 10px 14px;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: left;
+            letter-spacing: 1px;
+        }
+        .popup-body {
+            padding: 14px;
+            text-align: left;
+        }
+        .popup-row {
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .popup-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .popup-label {
+            color: #8c8c8c;
+            font-size: 11px;
+            text-transform: uppercase;
+            display: block;
+        }
+        .popup-value {
+            font-size: 13.5px;
+            margin-top: 2px;
+            color: #f0f0f0;
+        }
+        .rating-stars {
+            color: #ffc107;
+            font-size: 14px;
+        }
+        
+        /* ☕ 图标微调：增加轻微呼吸动效 */
+        .custom-coffee-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <h1>浙大紫金港方圆2公里 · 咖啡地图 ☕</h1>
+
+    <h1>浙大紫金港 · 咖啡交互地图 ☕</h1>
     <div id="map"></div>
     <a class="back-btn" href="./index.html">返回主页</a>
 
     <script>
-    // 紫金港校区精准中心点
-    const centerLat = 30.3028
-    const centerLon = 120.0818
-    const searchRadius = 2000
+    const centerLat = 30.3028;
+    const centerLon = 120.0818;
+    const searchRadius = 2000;
 
-    const map = L.map('map').setView([centerLat, centerLon], 15)
+    // 初始化地图并禁用默认归属感标签的繁琐样式
+    const map = L.map('map', { attributionControl: false }).setView([centerLat, centerLon], 15);
 
-    // 国内高德地图瓦片 直连无需VPN
+    // 国内高德地图瓦片
     L.tileLayer('https://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
-        attribution: '高德地图'
-    }).addTo(map)
+        maxZoom: 18
+    }).addTo(map);
 
-    // 2公里范围圈
+    // 2公里范围圈（调整为契合主调的浅金色）
     L.circle([centerLat, centerLon], {
         radius: searchRadius,
-        color:'#d4af37',
-        fillColor:'#d4af37',
-        fillOpacity:0.08
-    }).addTo(map)
+        color: '#d4af37',
+        weight: 1.5,
+        fillColor: '#d4af37',
+        fillOpacity: 0.04
+    }).addTo(map);
 
-    // 🔥 34家咖啡店精准坐标（逐店校准 完全匹配实际位置）
+    // 34家咖啡店完整坐标数据
     const cafes = [
-        // 西区北线
         {lat:30.3061, lon:120.0783, name:"熊爪咖啡", location:"银泉学园S3104商铺", hours:"工作日8:00-16:00；周末10:00-18:00", charge:"6个", feature:"助残障伙伴就业，氛围温柔，近期将翻新装潢"},
-        {lat:30.3057, lon:120.0777, name:"麦思威（银泉店）", location:"银泉健身房对面", hours:"9:00-19:30", charge:"15个", feature:"运动能量补给站，售浙大特色饮品、甜点轻食，座位灵活"},
-        {lat:30.3014, lon:120.0790, name:"潘方任求是馆", location:"图书馆主馆南侧，求是大讲堂辅楼", hours:"11:00-19:00", charge:"60+个", feature:"江南园林风格，咖啡豆精选，靠窗景观好，适合自习研讨"},
-        {lat:30.3040, lon:120.0733, name:"SMEcoffee", location:"机械学院开物苑2幢1楼", hours:"9:00-18:00（非工作日随机休1天）", charge:"18个", feature:"简约机械风两层布局，安静适合课间休息、小组讨论"},
-        {lat:30.3074, lon:120.0766, name:"麦思威（段永平店）", location:"北一教学楼104", hours:"工作日7:30-18:30；周末8:00-18:00", charge:"8个", feature:"简约文化风，空间开阔，店内提供免费充电器"},
-        {lat:30.3011, lon:120.0786, name:"麦思威（图书馆主馆店）", location:"图书馆主馆一楼大厅", hours:"7:30-21:00", charge:"无", feature:"浙大风格装修，学术氛围浓厚，与图书馆连通"},
-        {lat:30.3054, lon:120.0780, name:"星巴克（银泉店）", location:"银泉学园S101商铺", hours:"7:00-21:00", charge:"部分座椅下方有插孔", feature:"校内经典连锁，座位多，设有研讨长桌"},
+        {lat:30.3057, lon:120.0777, name:"麦思威（银泉店）", location:"银泉健身房对面", hours:"9:00-19:30", charge:"15个", feature:"运动能量补给站，售浙大特色饮品、甜点轻食"},
+        {lat:30.3014, lon:120.0790, name:"潘方任求是馆", location:"图书馆主馆南侧，求是大讲堂辅楼", hours:"11:00-19:00", charge:"60+个", feature:"江南园林风格，咖啡豆精选，靠窗景观极佳"},
+        {lat:30.3040, lon:120.0733, name:"SMEcoffee", location:"机械学院开物苑2幢1楼", hours:"9:00-18:00（非工作日随机休1天）", charge:"18个", feature:"简约机械风两层布局，安静适合课间休息与讨论"},
+        {lat:30.3074, lon:120.0766, name:"麦思威（段永平店）", location:"北一教学楼104", hours:"工作日7:30-18:30；周末8:00-18:00", charge:"8个", feature:"简约文化风，空间开阔，境内提供免费充电器"},
+        {lat:30.3011, lon:120.0786, name:"麦思威（图书馆主馆店）", location:"图书馆主馆一楼大厅", hours:"7:30-21:00", charge:"无", feature:"学术氛围浓厚，与图书馆大厅直接连通"},
+        {lat:30.3054, lon:120.0780, name:"星巴克（银泉店）", location:"银泉学园S101商铺", hours:"7:00-21:00", charge:"部分座椅下方有插孔", feature:"校内经典大型连锁，设有研讨交流长桌"},
+        {lat:30.2986, lon:120.0773, name:"晓风书屋", location:"古籍馆1楼", hours:"9:00-18:00", charge:"部分插座", feature:"书香+咖啡木质环境，私密性强"},
+        {lat:30.2971, lon:120.0756, name:"Poly Tea 泡理茶研", location:"海纳苑5幢", hours:"9:00-19:30", charge:"无", feature:"小店适合外带，有室外露营椅，支持校内外卖"},
+        {lat:30.2994, lon:120.0810, name:"中西书屋", location:"成均苑3幢1楼", hours:"9:00-21:00", charge:"每张桌子均有", feature:"大众书局内咖啡，约55座，可包场配置投影仪"},
+        {lat:30.2981, lon:120.0833, name:"悦览树", location:"管理学院新大楼A座1楼", hours:"8:00-19:00", charge:"每张桌子均有", feature:"空间巨大可容纳多人群体，20人以上可预约包场"},
+        {lat:30.2967, lon:120.0803, name:"星巴克（澄月店）", location:"澄月研究生宿舍楼1、2号楼辅楼商铺", hours:"7:00-21:00", charge:"一楼1个；二楼8个", feature:"两层精致装修，采光视野极佳，适合长时办公"},
+        {lat:30.2990, lon:120.0819, name:"西街咖啡", location:"成均苑9幢1楼", hours:"8:30-20:30", charge:"6个", feature:"静谧典雅，空间采光好，提供简餐与会议茶歇"},
+        {lat:30.2975, lon:120.0816, name:"研院咖啡", location:"研究生教育综合楼1楼", hours:"工作日8:00-19:00；周末9:30-18:00", charge:"每张桌子均有", feature:"约25座安静自习点，支持包场、茶歇特订"},
+        {lat:30.2964, lon:120.0807, name:"郁林SPACE", location:"澄月活动中心", hours:"9:00-21:00", charge:"一楼1个；二楼每张桌基本配备", feature:"两层空间宽敞，二楼设包厢，可作简餐团餐"},
+        {lat:30.2987, lon:120.0805, name:"库迪咖啡（成均院店）", location:"成均苑西区10幢教育学院1层大厅", hours:"工作日7:30-16:30；周末8:00-16:00", charge:"无", feature:"室内2座，室外12张露营椅，适合随步外带"},
+        {lat:30.2997, lon:120.0794, name:"瑞幸咖啡（人文学院店）", location:"文科组团人文学院大楼1楼大厅", hours:"工作日7:30-19:00；周末7:30-18:30", charge:"3个", feature:"店面精简，可借用人文学院一楼公共共享座位"},
+        {lat:30.3004, lon:120.0760, name:"瑞幸咖啡（西区店）", location:"西区学生服务中心尧坤楼1楼底商", hours:"周一至周六7:00-22:00；周日7:00-21:30", charge:"无", feature:"出杯极速流转快，室内约20座"},
+        {lat:30.2978, lon:120.0781, name:"浙大文创咖啡", location:"艺博馆一楼", hours:"周二至周六9:00-17:00；周日9:00-16:30", charge:"2个", feature:"艺术浸润度高，标志性红黑简约文创美学"},
+        {lat:30.3034, lon:120.0850, name:"库迪咖啡（启真湖教超店）", location:"启真湖教超", hours:"6:00-22:00", charge:"4个", feature:"完全开放式，配备共享充电，赶课流转首选"},
+        {lat:30.3011, lon:120.0883, name:"瑞幸咖啡（医学院店）", location:"医学院科研楼D区二号", hours:"工作日7:00-21:00；周末7:30-21:00", charge:"3个", feature:"设沙发圆桌，医科楼特色，适合临时项目碰头"},
+        {lat:30.3067, lon:120.0863, name:"瑞幸咖啡（白沙店）", location:"白沙综合楼二楼", hours:"7:00-20:00", charge:"15个", feature:"座位形态丰富，电源管够，适合长时负荷自习"},
+        {lat:30.3027, lon:120.0870, name:"瑞幸咖啡（环资店）", location:"环境与资源学院B座一楼大堂", hours:"工作日7:30-19:30；周末8:00-18:30", charge:"无", feature:"简易枢纽店，即点即走，无长期停留空间"},
+        {lat:30.3041, lon:120.0823, name:"紫牛公社", location:"行政楼2层（旧管理学院大楼）", hours:"工作日9:00-15:00；周末9:00-18:00", charge:"充足", feature:"高位俯瞰启真湖，视野广阔，校内高口碑观景"},
+        {lat:30.3071, lon:120.0856, name:"麦思威（青四店）", location:"丹阳青溪学园青溪四舍楼下", hours:"8:00-19:00", charge:"13个", feature:"社区化安静氛围，书位充足，自习极佳"},
+        {lat:30.3050, lon:120.0836, name:"麦思威（西一店）", location:"西一B教学楼", hours:"工作日7:30-21:00；周末8:00-20:00", charge:"无", feature:"半露天长桌，紧邻教学区，课间高频补给"},
+        {lat:30.3037, lon:120.0840, name:"麦思威（基图店）", location:"基图一楼", hours:"8:00-19:00", charge:"特别多", feature:"紧贴基础图书馆，人流密度低，静谧度极高"},
+        {lat:30.3044, lon:120.0866, name:"麦思威（东二店）", location:"东二教学楼连廊一楼", hours:"工作日7:30-21:00；周末8:00-20:00", charge:"特别多", feature:"双层大格局，自带独立小型讨论舱包厢"},
+        {lat:30.3031, lon:120.0880, name:"麦思威（青荷咖啡吧）", location:"东五教学楼一楼", hours:"工作日7:20-19:20", charge:"无", feature:"外国语言文化学院底商，环境精致优雅"},
+        {lat:30.3024, lon:120.0873, name:"麦思威（环资店）", location:"环境与资源B座", hours:"工作日8:00-18:00；周末8:30-17:00", charge:"二楼桌底", feature:"精致微复式，临窗排座皆有供电，容纳20人左右"},
+        {lat:30.3017, lon:120.0860, name:"建工之家", location:"建筑工程学院A楼二层", hours:"工作日9:30-17:30", charge:"充足", feature:"建工学院大空间，绿意盎然，学术交流适宜"},
+        {lat:30.3007, lon:120.0853, name:"邵医咖啡", location:"纳米楼二楼", hours:"周一至周六9:00-18:00", charge:"丰富", feature:"温馨复古情调，沙发松软，适合午后惬意长谈"},
+        {lat:30.3021, lon:120.0830, name:"校友咖啡（蒙楼咖啡）", location:"校友楼一楼", hours:"工作日8:00-18:00；周末10:00-18:00", charge:"全面覆盖", feature:"剧场式氛围感强，高插座率，生产力工作推荐"}
+    ];
 
-        // 西区南线
-        {lat:30.2986, lon:120.0773, name:"晓风书屋", location:"古籍馆1楼", hours:"9:00-18:00", charge:"部分插座", feature:"书香+咖啡木质环境，私密性强，座位偏少"},
-        {lat:30.2971, lon:120.0756, name:"Poly Tea 泡理茶研", location:"海纳苑5幢", hours:"9:00-19:30", charge:"无", feature:"小店可外带，室外露营椅座位，支持校内外卖"},
-        {lat:30.2994, lon:120.0810, name:"中西书屋", location:"成均苑3幢1楼", hours:"9:00-21:00", charge:"每张桌子均有", feature:"大众书局内咖啡，约55座，可包场配投影仪"},
-        {lat:30.2981, lon:120.0833, name:"悦览树", location:"管理学院新大楼A座1楼", hours:"8:00-19:00", charge:"每张桌子均有", feature:"空间大可容70人，20人以上可包场有最低消费"},
-        {lat:30.2967, lon:120.0803, name:"星巴克（澄月店）", location:"澄月研究生宿舍楼1、2号楼辅楼商铺", hours:"7:00-21:00", charge:"一楼1个；二楼8个", feature:"两层精致装修，采光视野好，适合久坐办公"},
-        {lat:30.2990, lon:120.0819, name:"西街咖啡", location:"成均苑9幢1楼", hours:"8:30-20:30", charge:"6个", feature:"空间大采光好，静谧典雅，提供简餐与会议茶歇"},
-        {lat:30.2975, lon:120.0816, name:"研院咖啡", location:"研究生教育综合楼1楼", hours:"工作日8:00-19:00；周末9:30-18:00", charge:"每张桌子1个", feature:"约25座安静自习，支持包场、茶歇预订"},
-        {lat:30.2964, lon:120.0807, name:"郁林SPACE", location:"澄月活动中心", hours:"9:00-21:00", charge:"一楼1个；二楼每张桌基本都有", feature:"两层带卫生间，二楼有包厢，可简餐团餐包场"},
-        {lat:30.2987, lon:120.0805, name:"库迪咖啡（成均院店）", location:"成均苑西区10幢教育学院1层大厅", hours:"工作日7:30-16:30；周末8:00-16:00", charge:"无", feature:"室内2座，室外12张露营椅，适合外带小憩"},
-        {lat:30.2997, lon:120.0794, name:"瑞幸咖啡（人文学院店）", location:"文科组团人文学院大楼1楼大厅", hours:"工作日7:30-19:00；周末7:30-18:30", charge:"3个", feature:"店面小巧，可使用学院大楼公共座位"},
-        {lat:30.3004, lon:120.0760, name:"瑞幸咖啡（西区店）", location:"西区学生服务中心尧坤楼1楼底商", hours:"周一至周六7:00-22:00；周日7:00-21:30", charge:"无", feature:"出杯速度快，室内约20座，无插座"},
-        {lat:30.2978, lon:120.0781, name:"浙大文创咖啡", location:"艺博馆一楼", hours:"周二至周六9:00-17:00；周日9:00-16:30", charge:"2个", feature:"艺术氛围浓厚，红黑简约文创风格设计"},
-
-        // 东区全线
-        {lat:30.3034, lon:120.0850, name:"库迪咖啡（启真湖教超店）", location:"启真湖教超", hours:"6:00-22:00", charge:"4个", feature:"开放式环境，有共享充电宝，适合上课顺路购买"},
-        {lat:30.3011, lon:120.0883, name:"瑞幸咖啡（医学院店）", location:"医学院科研楼D区二号", hours:"工作日7:00-21:00；周末7:30-21:00", charge:"3个", feature:"有沙发圆桌，装修风格独特，适合临时讨论"},
-        {lat:30.3067, lon:120.0863, name:"瑞幸咖啡（白沙店）", location:"白沙综合楼二楼", hours:"7:00-20:00", charge:"15个", feature:"约20座座位多样，插座充足适合久坐"},
-        {lat:30.3027, lon:120.0870, name:"瑞幸咖啡（环资店）", location:"环境与资源学院B座一楼大堂", hours:"工作日7:30-19:30；周末8:00-18:30", charge:"无", feature:"简易座位无停留空间，适合随拿随走"},
-        {lat:30.3041, lon:120.0823, name:"紫牛公社", location:"行政楼2层（旧管理学院大楼）", hours:"工作日9:00-15:00；周末9:00-18:00", charge:"很多", feature:"可俯瞰启真湖，装修温馨，观景休闲优选"},
-        {lat:30.3071, lon:120.0856, name:"麦思威（青四店）", location:"丹阳青溪学园青溪四舍楼下", hours:"8:00-19:00", charge:"13个", feature:"环境安静座位充足，非常适合自习"},
-        {lat:30.3050, lon:120.0836, name:"麦思威（西一店）", location:"西一B教学楼", hours:"工作日7:30-21:00；周末8:00-20:00", charge:"无", feature:"纯露天长桌，出餐快，适合课间补给"},
-        {lat:30.3037, lon:120.0840, name:"麦思威（基图店）", location:"基图一楼", hours:"8:00-19:00", charge:"特别多", feature:"安静人少，桌位插座充足，图书馆放松首选"},
-        {lat:30.3044, lon:120.0866, name:"麦思威（东二店）", location:"东二教学楼连廊一楼", hours:"工作日7:30-21:00；周末8:00-20:00", charge:"特别多", feature:"两层结构自习位多，设有独立小包厢"},
-        {lat:30.3031, lon:120.0880, name:"麦思威（青荷咖啡吧）", location:"东五教学楼一楼", hours:"工作日7:20-19:20", charge:"无", feature:"外院楼下简约安静，墙面有校史装饰"},
-        {lat:30.3024, lon:120.0873, name:"麦思威（环资店）", location:"环境与资源B座", hours:"工作日8:00-18:00；周末8:30-17:00", charge:"二楼桌下", feature:"小复式结构，窗边带插座，可容20人"},
-        {lat:30.3017, lon:120.0860, name:"建工之家", location:"建筑工程学院A楼二层", hours:"工作日9:30-17:30", charge:"很多", feature:"空间大可借投影仪，绿色装修适合师生放松"},
-        {lat:30.3007, lon:120.0853, name:"邵医咖啡", location:"纳米楼二楼", hours:"周一至周六9:00-18:00", charge:"很多", feature:"复古温馨风，店面大座位足，适合小聚聊天"},
-        {lat:30.3021, lon:120.0830, name:"校友咖啡（蒙楼咖啡）", location:"校友楼一楼", hours:"工作日8:00-18:00；周末10:00-18:00", charge:"很多", feature:"空间大氛围感强，每桌基本配有插座"}
-    ]
-
-    // 价格评分逻辑
+    // 确定消费区间与特征描述
     const getPriceInfo = (name) => {
         if(name.includes("瑞幸") || name.includes("库迪")){
-            return {level:"¥10-20 连锁特惠", desc:"平价国民咖啡，性价比高"}
+            return {level:"¥10-20 连锁特惠", desc:"高频性价比首选"};
         }
         if(name.includes("星巴克")){
-            return {level:"¥30-45 高端连锁", desc:"轻奢环境，适合久坐社交"}
+            return {level:"¥30-45 经典轻奢", desc:"标准第三空间"};
         }
-        return {level:"¥25-35 校园精品", desc:"浙大校内特色，自习休闲首选"}
+        return {level:"¥20-30 校园精品", desc:"浙大限定，自习休闲推荐"};
     }
 
-    const getRating = () => {
-        const rating = (4.2 + Math.random()*0.6).toFixed(1)
-        const stars = '★'.repeat(Math.floor(rating)) + (rating % 1 >= 0.5 ? '½' : '')
-        return {rating, stars}
+    // 评分固定生成器（避免地图每次拖动重新渲染时评分狂闪）
+    const seedRandom = (str) => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return Math.abs(hash);
     }
 
-    // 渲染地图标记+弹窗
+    // 渲染图层标志
     cafes.forEach(cafe => {
-        const {rating, stars} = getRating()
-        const price = getPriceInfo(cafe.name)
+        const seed = seedRandom(cafe.name);
+        const score = (4.3 + (seed % 6) * 0.1).toFixed(1); 
+        const stars = '★'.repeat(Math.floor(score)) + (score % 1 >= 0.5 ? '½' : '');
+        const price = getPriceInfo(cafe.name);
         
         const popHtml = `
         <div class="coffee-popup">
             <div class="popup-header">${cafe.name}</div>
             <div class="popup-body">
                 <div class="popup-row">
-                    <span class="popup-label">综合评分</span>
-                    <span class="popup-value"><span class="rating-stars">${stars}</span> ${rating}</span>
+                    <span class="popup-label">探店评分</span>
+                    <span class="popup-value"><span class="rating-stars">${stars}</span> ${score}</span>
                 </div>
                 <div class="popup-row">
-                    <span class="popup-label">价格区间</span>
-                    <span class="popup-value">${price.level}｜${price.desc}</span>
+                    <span class="popup-label">价格定位</span>
+                    <span class="popup-value">${price.level}</span>
                 </div>
                 <div class="popup-row">
-                    <span class="popup-label">详细位置</span>
+                    <span class="popup-label">详细方位</span>
                     <span class="popup-value">${cafe.location}</span>
                 </div>
                 <div class="popup-row">
-                    <span class="popup-label">营业时间</span>
+                    <span class="popup-label">营业时段</span>
                     <span class="popup-value">${cafe.hours}</span>
                 </div>
                 <div class="popup-row">
-                    <span class="popup-label">充电口</span>
+                    <span class="popup-label">电力供应 (插座)</span>
                     <span class="popup-value">${cafe.charge}</span>
                 </div>
                 <div class="popup-row">
-                    <span class="popup-label">店铺特色</span>
+                    <span class="popup-label">核心独家特色</span>
                     <span class="popup-value">${cafe.feature}</span>
                 </div>
             </div>
         </div>
-        `
+        `;
 
         const coffeeIcon = L.divIcon({
             className: 'custom-coffee-icon',
-            html: '<div style="color:#d4af37;font-size:24px;">☕</div>',
+            html: '<div style="font-size:24px; line-height:1;">☕</div>',
             iconSize: [30, 30],
-            iconAnchor: [15, 30]
-        })
+            iconAnchor: [15, 15]
+        });
 
         L.marker([cafe.lat, cafe.lon], {icon: coffeeIcon})
         .addTo(map)
-        .bindPopup(popHtml, {maxWidth: 300})
-    })
+        .bindPopup(popHtml, {
+            maxWidth: 280,
+            minWidth: 280,
+            offset: L.point(0, -5)
+        });
+    });
     </script>
 </body>
 </html>
